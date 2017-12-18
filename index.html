@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pub Sub</title>
+    <style type="text/css">
+        a:link {
+            text-decoration: none;
+        }
+
+        body {
+            font-family: "Arial";
+            margin: 40px auto;
+            max-width: 850px;
+            line-height: 1.6;
+            font-size: 18px;
+            height: 90vh;
+            background-color: rgb(211, 211, 211);
+            color: rgb(0, 0, 0);
+            padding: 0 10px
+        }
+
+        #result {
+            padding: 8px;
+            overflow: auto;
+            height: 90%;
+            width:100%;
+            max-height: 1200px;
+            background-color: rgb(32, 32, 32);
+            color: rgb(253, 246, 230)
+        }
+
+        #input-text {
+            width: 100%;
+            padding: 8px;
+            font-size: 16pt;
+            background-color: rgb(32, 32, 32);
+            color: rgb(253, 246, 230);
+            font-weight: normal; 
+            outline-width: 0;
+            border: 1px solid grey;
+
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: "Arial";
+            line-height: 1.2
+        }
+    </style>
+</head>
+<script src="https://ai-mod.com/jquery.min.js"></script>
+<body>
+    <h3 id="header" style="text-align: center">Stuff</h3>
+    <div id="result">﹥ </div>
+    <div>
+        <input id="input-text" type="text" autocomplete="off" placeholder="Send Message" autofocus="autofocus" />
+        </div>
+    <script>
+        var stream = window.location.pathname.slice(3)
+
+        if (typeof (EventSource) !== "undefined") {
+            document.getElementById("header").innerText = stream.toUpperCase()
+            var source = new EventSource("../s/" + stream);
+            source.onmessage = function (event) {
+                var objDiv = document.getElementById("result");
+                objDiv.innerHTML += event.data + "<br>" + "﹥ ";
+                
+                if (objDiv.scrollTop > objDiv.scrollHeight - objDiv.clientHeight - 150) {
+                    objDiv.scrollTop = objDiv.scrollHeight;
+                }
+            };
+        } else {
+            document.getElementById("result").innerHTML = "Sorry, your browser does not support server-sent events...";
+        }
+
+        $('#input-text').keypress('input', function(e) {
+        if(e.which == 13) {
+            console.log("testestset")
+            term = $("#input-text").val()
+            /* Send the data using post */
+            var posting = $.post("../s/" + stream, term, function(data) {}, "json");
+            $("#input-text").val("")
+        }
+        });
+    </script>
+
+</body>
+
+</html>
