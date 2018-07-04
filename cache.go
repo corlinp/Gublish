@@ -50,7 +50,6 @@ func (cache *Cache) add(data []byte) {
 		cache.head = cache.head.next
 		cache.size--
 	}
-	//fmt.Println("AddedtoCache", cache.size)
 }
 
 func (cache *Cache) get(rw http.ResponseWriter) {
@@ -68,12 +67,6 @@ func (cache *Cache) listen(broker *Broker) {
 	defer func() {
 		broker.closingClients <- cache.subscription
 	}()
-
-	// timeout := make(chan bool, 1)
-	// go func() {
-	// 	time.SleepcacheTimeout()
-	// 	timeout <- true
-	// }()
 
 	for {
 		select {
