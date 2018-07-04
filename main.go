@@ -1,4 +1,3 @@
-// v3 of the great example of SSE in go by @ismasan.
 package main
 
 import (
@@ -10,8 +9,6 @@ import (
 	"time"
 )
 
-// the amount of time to wait when pushing a message to
-// a slow client or a client that closed after `range clients` started.
 const patience time.Duration = time.Second * 1
 
 var ssePrefix = []byte("data: ")
@@ -30,17 +27,14 @@ type Subscription struct {
 }
 
 func NewServer() (broker *Broker) {
-	// Instantiate a broker
 	broker = &Broker{
 		caches:         make(map[string]*Cache),
 		newClients:     make(chan Subscription),
 		closingClients: make(chan Subscription),
 		clients:        make(map[string]map[chan []byte]bool),
 	}
-
-	// Set it running - listening and broadcasting events
 	go broker.listen()
-
+	
 	return
 }
 
@@ -63,8 +57,6 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if req.Method == "GET" {
-		// Make sure that the writer supports flushing.
-		//
 		flusher, ok := rw.(http.Flusher)
 
 		if !ok {
@@ -87,7 +79,6 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		broker.newClients <- sub
 
 		// Remove this client from the map of connected clients
-		// when this handler exits.
 		defer func() {
 			broker.closingClients <- sub
 		}()
@@ -132,8 +123,6 @@ func (broker *Broker) notify(stream string, data []byte) {
 		cache.add(data)
 		broker.caches[stream] = cache
 	}
-	//broker.caches[stream].add(data)
-	// Notify
 	if clientMap, ok := broker.clients[stream]; ok {
 		for clientMessageChan := range clientMap {
 			select {
@@ -153,8 +142,7 @@ func (broker *Broker) listen() {
 		select {
 		case s := <-broker.newClients:
 
-			// A new client has connected.
-			// Register their message channel
+			// A new client has connected
 			if _, ok := broker.clients[s.stream]; !ok {
 				broker.clients[s.stream] = make(map[chan []byte]bool)
 			}
@@ -164,8 +152,7 @@ func (broker *Broker) listen() {
 
 		case s := <-broker.closingClients:
 
-			// A client has dettached and we want to
-			// stop sending them messages.
+			// A client has disconnected
 			if len(broker.clients[s.stream]) == 0 {
 				delete(broker.clients, s.stream)
 			} else {
@@ -177,8 +164,6 @@ func (broker *Broker) listen() {
 }
 
 func main() {
-	//mux := http.NewServeMux()
-	//mux.Handle("/sub", broker)
 	broker := NewServer()
 	go exampleSender(broker)
 	log.Fatal("HTTP server error: ", http.ListenAndServe("0.0.0.0:80", broker))
@@ -194,7 +179,3 @@ func exampleSender(broker *Broker) {
 		i++
 	}
 }
-
-// .\go-wrk.exe -c 80 -d 45 http://162.243.141.62/
-
-// .\go-wrk.exe -c 80 -d 5 http://localhost:3000/test -M POST -body "test"
